@@ -1,0 +1,21 @@
+sudo: required
+services:
+    - docker
+
+before_install:
+    - docker build -t sharmarajdaksh/react-test -f ./client/Dockerfile.dev ./client
+
+scripts:
+    - docker run -e CI=true sharmarajdaksh/react-test npm run test
+
+after_success:
+    - docker build -t sharmarajdaksh/multi-client ./client
+    - docker build -t sharmarajdaksh/multi-nginx ./nginx
+    - docker build -t sharmarajdaksh/multi-server ./server
+    - docker build -t sharmarajdaksh/multi-worker ./worker
+    # Log in to Docker CLI using Travis secrets
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+    - docker push sharmarajdaksh/multi-client
+    - docker push sharmarajdaksh/multi-nginx
+    - docker push sharmarajdaksh/multi-server
+    - docker push sharmarajdaksh/multi-worker
